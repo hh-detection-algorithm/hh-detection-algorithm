@@ -1,0 +1,10 @@
+48w0x0 .. 48w0x98967f : get_absolute_window_id(32w1);
+48w0x989680 .. 48w0x1312cff : get_absolute_window_id(32w2);
+48w0x1312d00 .. 48w0x1c9c37f : get_absolute_window_id(32w3);
+48w0x1c9c380 .. 48w0x26259ff : get_absolute_window_id(32w4);
+48w0x2625a00 .. 48w0x2faf07f : get_absolute_window_id(32w5);
+48w0x2faf080 .. 48w0x39386ff : get_absolute_window_id(32w6);
+48w0x3938700 .. 48w0x42c1d7f : get_absolute_window_id(32w7);
+48w0x42c1d80 .. 48w0x4c4b3ff : get_absolute_window_id(32w8);
+48w0x4c4b400 .. 48w0x55d4a7f : get_absolute_window_id(32w9);
+48w0x55d4a80 .. 48w0x5f5e0ff : get_absolute_window_id(32w0);
