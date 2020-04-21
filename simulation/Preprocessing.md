@@ -1,9 +1,7 @@
 # Dataset Preprocessing Guidelines
+The guideline is written for pre-processing CAIDA passive traces. For other traffic traces (e.g. IMC2010 DC trace), the process is similar, however, it may require minor tweaks. 
+
 ## Pre-processing
-The guideline is written for pre-processing CAIDA passive traces. Other traffic traces (e.g. IMC2010 DC trace) may require corresponding minor tweaks. 
-
-The following steps are discussed based on the use of CAIDA passive traces.
-
 Taking the CAIDA February 2016 data trace as an example, once downloaded, the directory, `20160218-130000.UTC`, contains
 the files with extensions *.pcap.gz, *.pcap.stats and *.times.gz.
 
