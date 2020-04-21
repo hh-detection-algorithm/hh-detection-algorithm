@@ -1,7 +1,6 @@
 # Dataset Preprocessing Guidelines
 ## Pre-processing
-The program was designed and tested with pre-processed CAIDA passive traces only. Other traffic traces may require 
-minor tweaks. 
+The guideline is written for pre-processing CAIDA passive traces. Other traffic traces (e.g. IMC2010 DC trace) may require corresponding minor tweaks. 
 
 The following steps are discussed based on the use of CAIDA passive traces.
 
