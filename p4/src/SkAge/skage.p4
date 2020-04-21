@@ -162,7 +162,6 @@ control MyEgress(inout headers hdr,
         SKETCH_COUNT(0, meta.flowId, 104w11111111111111111111);
         SKETCH_COUNT(1, meta.flowId, 104w22222222222222222222);
         SKETCH_COUNT(2, meta.flowId, 104w33333333333333333333);
-
     }
 
     apply {
