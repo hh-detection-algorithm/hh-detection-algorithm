@@ -6,7 +6,7 @@
 
 
 /* MACROS */
-#define SKETCH_ROW_LENGTH 2
+#define SKETCH_ROW_LENGTH 8160
 #define SKETCH_CELL_BIT_WIDTH 32
 
 #define SKETCH_INIT(num) register<bit<SKETCH_CELL_BIT_WIDTH>>(SKETCH_ROW_LENGTH) sketch##num
@@ -157,14 +157,16 @@ control MyEgress(inout headers hdr,
         }
     }
 
-    apply {
-        // preprocessing
+    action skage(){
         extract_flow_id();
-
-        /* SkAge */
         SKETCH_COUNT(0, meta.flowId, 104w11111111111111111111);
         SKETCH_COUNT(1, meta.flowId, 104w22222222222222222222);
         SKETCH_COUNT(2, meta.flowId, 104w33333333333333333333);
+
+    }
+
+    apply {
+        skage();
     }
 
 }

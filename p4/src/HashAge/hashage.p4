@@ -11,14 +11,52 @@
 
 #define HA_INIT(num) register<bit<ENTRY_WIDTH>>(ENTRIES_PER_TABLE) ha##num
 
-#define GET_ENTRY(num, seed) hash(meta.currentIndex, HashAlgorithm.crc32, (bit<32>)0, {meta.flowId, seed}, (bit<32>)ENTRIES_PER_TABLE);\
+#define GET_ENTRY(num, seed) \
+hash(meta.currentIndex, HashAlgorithm.crc32, (bit<32>)0, {meta.flowId, seed}, (bit<32>)ENTRIES_PER_TABLE);\
 ha##num.read(meta.currentEntry, meta.currentIndex);
+
 #define WRITE_ENTRY(num, entry) ha##num.write(meta.currentIndex, entry)
+
+#define STAGE_N(num, seed) {\
+GET_ENTRY(num, seed);\
+meta.currentKey = meta.currentEntry[167:64];\
+meta.currentCount = meta.currentEntry[63:32];\
+meta.currentWin = meta.currentEntry[31:0];\
+meta.currentCount =  (meta.currentCount >> (bit<8>)(meta.mAbsWindowId-meta.currentWin));\
+meta.currentWin = meta.mAbsWindowId;\
+if (meta.currentKey - meta.carriedKey == 0) {\
+    meta.toWriteKey = meta.currentKey;\
+    meta.toWriteCount = meta.currentCount + meta.carriedCount;\
+    meta.toWriteWin = meta.carriedWin;\
+    meta.carriedKey = 0;\
+    meta.carriedCount = 0;\
+    meta.carriedWin = 0;\
+} else {\
+    if (meta.carriedCount > meta.currentCount) {\
+        meta.toWriteKey = meta.carriedKey;\
+        meta.toWriteCount = meta.carriedCount;\
+        meta.toWriteWin = meta.carriedWin;\
+\
+        meta.carriedKey = meta.currentKey;\
+        meta.carriedCount = meta.currentCount;\
+        meta.carriedWin = meta.carriedWin;\
+    } else {\
+        meta.toWriteKey = meta.currentKey;\
+        meta.toWriteCount = meta.currentCount;\
+        meta.toWriteWin = meta.carriedWin;\
+    }\
+}\
+bit<168> temp = meta.toWriteKey ++ meta.toWriteCount ++ meta.toWriteWin;\
+WRITE_ENTRY(num, temp);\
+}
 
 /* Initialize HA*/
 HA_INIT(0);
 HA_INIT(1);
 HA_INIT(2);
+HA_INIT(3);
+HA_INIT(4);
+HA_INIT(5);
 
 /* Wrap around */
 const bit<32> WINDOWS_PER_PHASE = 10; // # of entries in the TCAM
@@ -183,90 +221,18 @@ control MyEgress(inout headers hdr,
         WRITE_ENTRY(0, temp);
     }
 
-    action stage2() {
-        GET_ENTRY(1, 104w11111111111111111111);
-
-        meta.currentKey = meta.currentEntry[167:64];
-        meta.currentCount = meta.currentEntry[63:32];
-        meta.currentWin = meta.currentEntry[31:0];
-        meta.currentCount =  (meta.currentCount >> (bit<8>)(meta.mAbsWindowId-meta.currentWin));
-        meta.currentWin = meta.mAbsWindowId;
-
-         // If the flowIds are the same
-        if (meta.currentKey - meta.carriedKey == 0) {
-            meta.toWriteKey = meta.currentKey;
-            meta.toWriteCount = meta.currentCount + meta.carriedCount;
-            meta.toWriteWin = meta.carriedWin;
-
-            meta.carriedKey = 0;
-            meta.carriedCount = 0;
-            meta.carriedWin = 0;
-        } else {
-            if (meta.carriedCount > meta.currentCount) {
-                meta.toWriteKey = meta.carriedKey;
-                meta.toWriteCount = meta.carriedCount;
-                meta.toWriteWin = meta.carriedWin;
-
-                meta.carriedKey = meta.currentKey;
-                meta.carriedCount = meta.currentCount;
-                meta.carriedWin = meta.carriedWin;
-            } else {
-                meta.toWriteKey = meta.currentKey;
-                meta.toWriteCount = meta.currentCount;
-                meta.toWriteWin = meta.carriedWin;
-            }
-        }
-
-        bit<168> temp = meta.toWriteKey ++ meta.toWriteCount ++ meta.toWriteWin;
-        WRITE_ENTRY(1, temp);
-    }
-
-    action stage3() {
-        GET_ENTRY(2, 104w22222222222222222222);
-
-        meta.currentKey = meta.currentEntry[167:64];
-        meta.currentCount = meta.currentEntry[63:32];
-        meta.currentWin = meta.currentEntry[31:0];
-        meta.currentCount =  (meta.currentCount >> (bit<8>)(meta.mAbsWindowId-meta.currentWin));
-        meta.currentWin = meta.mAbsWindowId;
-
-         // If the flowIds are the same
-        if (meta.currentKey - meta.carriedKey == 0) {
-            meta.toWriteKey = meta.currentKey;
-            meta.toWriteCount = meta.currentCount + meta.carriedCount;
-            meta.toWriteWin = meta.carriedWin;
-
-            meta.carriedKey = 0;
-            meta.carriedCount = 0;
-            meta.carriedWin = 0;
-        } else {
-            if (meta.carriedCount > meta.currentCount) {
-                meta.toWriteKey = meta.carriedKey;
-                meta.toWriteCount = meta.carriedCount;
-                meta.toWriteWin = meta.carriedWin;
-
-                meta.carriedKey = meta.currentKey;
-                meta.carriedCount = meta.currentCount;
-                meta.carriedWin = meta.carriedWin;
-            } else {
-                meta.toWriteKey = meta.currentKey;
-                meta.toWriteCount = meta.currentCount;
-                meta.toWriteWin = meta.carriedWin;
-            }
-        }
-
-        bit<168> temp = meta.toWriteKey ++ meta.toWriteCount ++ meta.toWriteWin;
-        WRITE_ENTRY(2, temp);
+    action hashage() {
+        extract_flow_id();
+        stage1();
+        STAGE_N(1, 104w11111111111111111111);
+        STAGE_N(2, 104w22222222222222222222);
+        STAGE_N(3, 104w33333333333333333333);
+        STAGE_N(4, 104w44444444444444444444);
+        STAGE_N(5, 104w55555555555555555555);
     }
 
     apply {
-        // preprocessing
-        extract_flow_id();
-
-        /* HashAge */
-        stage1();
-        stage2();
-        stage3();
+        hashage();
     }
 
 }
