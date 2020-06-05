@@ -18,6 +18,7 @@ ha##num.read(meta.currentEntry, meta.currentIndex);
 #define WRITE_ENTRY(num, entry) ha##num.write(meta.currentIndex, entry)
 
 #define STAGE_N(num, seed) {\
+meta.flowId = meta.carriedKey;\
 GET_ENTRY(num, seed);\
 meta.currentKey = meta.currentEntry[167:64];\
 meta.currentCount = meta.currentEntry[63:32];\

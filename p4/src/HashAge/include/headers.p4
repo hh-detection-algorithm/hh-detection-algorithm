@@ -50,9 +50,6 @@ header udp_t {
 struct metadata {
     bit<104>    flowId;
 
-    bit<32>     s1Index;
-    bit<32>     s2Index;
-
     bit<32>     currentIndex;
     bit<168>    currentEntry;
 
